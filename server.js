@@ -1,8 +1,5 @@
 const express = require('express');
 const MongoClient = require('mongodb').MongoClient
-const userModel = require("./models/usermodel");
-const employeemodel = require("./models/employeemodel");
-const managesitesmodel = require("./models/managesitesmodel");
 const authenticateToken = require("./middleware/authenticateToken");
 const { isUser } = require("./middleware/isUser");
 const { findUser } = require("./middleware/findUser");
@@ -28,9 +25,7 @@ const port = process.env.PORT || 5001;
 //Middleware
 
 app.use(cors());
-
 app.use(express.json());
-
 app.use(
   express.urlencoded({
     extended: true
@@ -52,6 +47,14 @@ function generateAccessToken(username) {
   return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '5000000s' });
 }
 
+//Login API call
+app.post('/login', findUser(connection), (req,res)=> {  
+
+  const token = generateAccessToken({empCode: req.body.empCode});
+  res.status(200).json({token:token,user:req.result,allo:res.allo})
+
+});
+
 //Is Server run API call
 app.get('/',(req,res) =>{
   res.send("Attendance System API's is ready to use.");
@@ -69,14 +72,6 @@ app.post('/verify', authenticateToken, (req, res) => {
   res.send(200)
 });
 
-//Login API call
-app.post('/login', findUser(connection), (req,res)=> {
-  const token = generateAccessToken({ code: req.body.code });
-  req.result.length > 0 ? 
-  res.json({token:token,user:req.result,allo:res.allo}):
-  
-  res.status(404).json({"error":'User is not found'})
-});
 
 //Login API call for web
 app.post('/webLogin', webLogin(connection), (req,res)=> {
